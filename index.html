@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Guardian - Roadside Assistance India</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-shield-alt"></i>
+            <span>Travel Guardian</span>
+        </div>
+        <div class="header-right">
+            <div class="location-display" id="locationDisplay">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="currentLocation">Detecting location...</span>
+            </div>
+            <button class="emergency-btn" onclick="callEmergency()">
+                <i class="fas fa-phone-alt"></i> Emergency: 112
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Service Selection -->
+        <section class="service-section">
+            <h2>What do you need help with?</h2>
+            <div class="service-buttons">
+                <button class="service-btn" data-service="tire" onclick="selectService('tire')">
+                    <i class="fas fa-circle-notch"></i>
+                    <span>Tire Puncture</span>
+                </button>
+                <button class="service-btn" data-service="tow" onclick="selectService('tow')">
+                    <i class="fas fa-truck-pickup"></i>
+                    <span>Need Tow</span>
+                </button>
+                <button class="service-btn" data-service="battery" onclick="selectService('battery')">
+                    <i class="fas fa-car-battery"></i>
+                    <span>Dead Battery</span>
+                </button>
+                <button class="service-btn" data-service="fuel" onclick="selectService('fuel')">
+                    <i class="fas fa-gas-pump"></i>
+                    <span>Out of Fuel</span>
+                </button>
+                <button class="service-btn" data-service="keys" onclick="selectService('keys')">
+                    <i class="fas fa-key"></i>
+                    <span>Locked Out</span>
+                </button>
+                <button class="service-btn" data-service="mechanic" onclick="selectService('mechanic')">
+                    <i class="fas fa-wrench"></i>
+                    <span>Mechanic</span>
+                </button>
+                <button class="service-btn" data-service="accident" onclick="selectService('accident')">
+                    <i class="fas fa-car-crash"></i>
+                    <span>Accident</span>
+                </button>
+                <button class="service-btn" data-service="other" onclick="selectService('other')">
+                    <i class="fas fa-ellipsis-h"></i>
+                    <span>Other Help</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Selected Service Info -->
+        <div class="selected-service-banner" id="selectedServiceBanner">
+            <div class="service-info">
+                <i class="fas fa-info-circle"></i>
+                <span id="selectedServiceText">Select a service above to find nearby help</span>
+            </div>
+            <button class="clear-btn" onclick="clearService()" id="clearServiceBtn" style="display: none;">
+                <i class="fas fa-times"></i> Clear
+            </button>
+        </div>
+
+        <!-- Map and Providers Section -->
+        <div class="map-providers-container">
+            <!-- Map Section -->
+            <section class="map-section">
+                <div class="map-header">
+                    <h3><i class="fas fa-map"></i> Your Location</h3>
+                    <button class="refresh-location" onclick="refreshLocation()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="map-container" id="mapContainer">
+                    <div class="map-placeholder" id="mapPlaceholder">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <p>Loading map...</p>
+                    </div>
+                    <iframe id="googleMap" style="display: none;"></iframe>
+                </div>
+            </section>
+
+            <!-- Providers List -->
+            <section class="providers-section">
+                <div class="providers-header">
+                    <h3><i class="fas fa-store"></i> Nearby Assistance (<span id="providerCount">0</span>)</h3>
+                    <div class="sort-options">
+                        <select id="sortBy" onchange="sortProviders()">
+                            <option value="distance">Sort by Distance</option>
+                            <option value="rating">Sort by Rating</option>
+                            <option value="price">Sort by Price</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="providers-list" id="providersList">
+                    <div class="loading-providers">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Select a service to find nearby providers...</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Provider Detail Modal -->
+    <div class="modal" id="providerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalProviderName">Provider Name</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="provider-detail-info">
+                    <div class="detail-row">
+                        <i class="fas fa-star"></i>
+                        <span id="modalRating">4.5</span>
+                        <span class="reviews" id="modalReviews">(120 reviews)</span>
+                    </div>
+                    <div class="detail-row">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span id="modalDistance">2.5 km away</span>
+                    </div>
+                    <div class="detail-row">
+                        <i class="fas fa-clock"></i>
+                        <span id="modalEta">ETA: 15-20 mins</span>
+                    </div>
+                    <div class="detail-row">
+                        <i class="fas fa-phone"></i>
+                        <span id="modalPhone">+91 98765 43210</span>
+                    </div>
+                </div>
+                
+                <div class="service-pricing">
+                    <h4>Service Pricing</h4>
+                    <div class="price-breakdown" id="priceBreakdown">
+                        <!-- Filled dynamically -->
+                    </div>
+                    <div class="total-price">
+                        <span>Estimated Total</span>
+                        <span id="modalTotalPrice">₹500</span>
+                    </div>
+                </div>
+
+                <div class="provider-actions">
+                    <button class="btn-call" onclick="callProvider()">
+                        <i class="fas fa-phone-alt"></i> Call Now
+                    </button>
+                    <button class="btn-book" onclick="showPaymentFlow()">
+                        <i class="fas fa-calendar-check"></i> Book & Pay
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Flow Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content payment-modal">
+            <div class="modal-header">
+                <button class="back-btn" onclick="goBackToProvider()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h3>Payment</h3>
+                <button class="modal-close" onclick="closePaymentModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Payment Steps -->
+            <div class="payment-steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <span>Details</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <span>Payment</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <span>Confirm</span>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <!-- Step 1: Vehicle Details -->
+                <div class="payment-step-content" id="step1Content">
+                    <h4>Vehicle Details</h4>
+                    <form class="vehicle-form" id="vehicleForm">
+                        <div class="form-group">
+                            <label>Vehicle Type</label>
+                            <select id="vehicleType" required>
+                                <option value="">Select Vehicle Type</option>
+                                <option value="two-wheeler">Two Wheeler</option>
+                                <option value="hatchback">Hatchback</option>
+                                <option value="sedan">Sedan</option>
+                                <option value="suv">SUV</option>
+                                <option value="commercial">Commercial Vehicle</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Vehicle Number</label>
+                            <input type="text" id="vehicleNumber" placeholder="e.g., MH 01 AB 1234" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Your Name</label>
+                            <input type="text" id="customerName" placeholder="Enter your name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Mobile Number</label>
+                            <input type="tel" id="customerPhone" placeholder="+91 98765 43210" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Additional Notes (Optional)</label>
+                            <textarea id="additionalNotes" placeholder="Any specific details about your situation..."></textarea>
+                        </div>
+                    </form>
+                    <button class="btn-primary full-width" onclick="goToStep(2)">
+                        Continue to Payment <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Step 2: Payment Method -->
+                <div class="payment-step-content hidden" id="step2Content">
+                    <h4>Select Payment Method</h4>
+                    
+                    <div class="order-summary">
+                        <div class="summary-row">
+                            <span>Service</span>
+                            <span id="summaryService">Tire Puncture Repair</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Provider</span>
+                            <span id="summaryProvider">Quick Fix Auto</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total Amount</span>
+                            <span id="summaryTotal">₹500</span>
+                        </div>
+                    </div>
+
+                    <div class="payment-methods">
+                        <label class="payment-option">
+                            <input type="radio" name="paymentMethod" value="upi" checked>
+                            <div class="payment-option-content">
+                                <div class="payment-icons">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/UPI-Logo-vector.svg/1200px-UPI-Logo-vector.svg.png" alt="UPI" class="payment-icon">
+                                </div>
+                                <div class="payment-info">
+                                    <span class="payment-name">UPI</span>
+                                    <span class="payment-desc">Google Pay, PhonePe, Paytm</span>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <label class="payment-option">
+                            <input type="radio" name="paymentMethod" value="card">
+                            <div class="payment-option-content">
+                                <div class="payment-icons">
+                                    <i class="fab fa-cc-visa"></i>
+                                    <i class="fab fa-cc-mastercard"></i>
+                                </div>
+                                <div class="payment-info">
+                                    <span class="payment-name">Credit/Debit Card</span>
+                                    <span class="payment-desc">Visa, Mastercard, RuPay</span>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <label class="payment-option">
+                            <input type="radio" name="paymentMethod" value="netbanking">
+                            <div class="payment-option-content">
+                                <div class="payment-icons">
+                                    <i class="fas fa-university"></i>
+                                </div>
+                                <div class="payment-info">
+                                    <span class="payment-name">Net Banking</span>
+                                    <span class="payment-desc">All major banks supported</span>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <label class="payment-option">
+                            <input type="radio" name="paymentMethod" value="wallet">
+                            <div class="payment-option-content">
+                                <div class="payment-icons">
+                                    <i class="fas fa-wallet"></i>
+                                </div>
+                                <div class="payment-info">
+                                    <span class="payment-name">Wallet</span>
+                                    <span class="payment-desc">Paytm, Amazon Pay, MobiKwik</span>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <label class="payment-option">
+                            <input type="radio" name="paymentMethod" value="cod">
+                            <div class="payment-option-content">
+                                <div class="payment-icons">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <div class="payment-info">
+                                    <span class="payment-name">Cash on Service</span>
+                                    <span class="payment-desc">Pay when service is completed</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- UPI Input (shown when UPI is selected) -->
+                    <div class="upi-input" id="upiInput">
+                        <div class="form-group">
+                            <label>Enter UPI ID</label>
+                            <input type="text" id="upiId" placeholder="yourname@upi">
+                        </div>
+                        <div class="upi-apps">
+                            <span>Or pay using:</span>
+                            <div class="upi-app-buttons">
+                                <button type="button" class="upi-app-btn" onclick="selectUpiApp('gpay')">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Google_Pay_Logo.svg/512px-Google_Pay_Logo.svg.png" alt="Google Pay">
+                                </button>
+                                <button type="button" class="upi-app-btn" onclick="selectUpiApp('phonepe')">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/PhonePe_Logo.svg/1024px-PhonePe_Logo.svg.png" alt="PhonePe">
+                                </button>
+                                <button type="button" class="upi-app-btn" onclick="selectUpiApp('paytm')">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Paytm_Logo_%28standalone%29.svg/1200px-Paytm_Logo_%28standalone%29.svg.png" alt="Paytm">
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Input (hidden by default) -->
+                    <div class="card-input hidden" id="cardInput">
+                        <div class="form-group">
+                            <label>Card Number</label>
+                            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Expiry Date</label>
+                                <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5">
+                            </div>
+                            <div class="form-group">
+                                <label>CVV</label>
+                                <input type="password" id="cardCvv" placeholder="123" maxlength="3">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Cardholder Name</label>
+                            <input type="text" id="cardName" placeholder="Name on card">
+                        </div>
+                    </div>
+
+                    <button class="btn-primary full-width" onclick="goToStep(3)">
+                        Pay ₹<span id="payAmount">500</span> <i class="fas fa-lock"></i>
+                    </button>
+                    <p class="secure-payment">
+                        <i class="fas fa-shield-alt"></i> 100% Secure Payment
+                    </p>
+                </div>
+
+                <!-- Step 3: Confirmation -->
+                <div class="payment-step-content hidden" id="step3Content">
+                    <div class="confirmation-content">
+                        <div class="success-animation">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h4>Booking Confirmed!</h4>
+                        <p class="booking-id">Booking ID: <strong id="bookingId">TG2024112500001</strong></p>
+                        
+                        <div class="confirmation-details">
+                            <div class="detail-card">
+                                <div class="detail-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="detail-info">
+                                    <span class="detail-label">Service Provider</span>
+                                    <span class="detail-value" id="confirmProvider">Quick Fix Auto</span>
+                                </div>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="detail-info">
+                                    <span class="detail-label">Expected Arrival</span>
+                                    <span class="detail-value" id="confirmEta">15-20 minutes</span>
+                                </div>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-icon">
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                <div class="detail-info">
+                                    <span class="detail-label">Contact Number</span>
+                                    <span class="detail-value" id="confirmPhone">+91 98765 43210</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tracking-info">
+                            <i class="fas fa-map-marker-alt pulse"></i>
+                            <p>Your service provider is on the way!</p>
+                            <button class="btn-track" onclick="trackProvider()">
+                                <i class="fas fa-location-arrow"></i> Track Live Location
+                            </button>
+                        </div>
+
+                        <div class="confirmation-actions">
+                            <button class="btn-secondary" onclick="closePaymentModal()">
+                                <i class="fas fa-home"></i> Back to Home
+                            </button>
+                            <button class="btn-primary" onclick="callProvider()">
+                                <i class="fas fa-phone-alt"></i> Call Provider
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Success!</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Travel Guardian</h4>
+                <p>24/7 Roadside Assistance across India</p>
+            </div>
+            <div class="footer-section">
+                <h4>Emergency</h4>
+                <p><i class="fas fa-phone"></i> 112 (National Emergency)</p>
+                <p><i class="fas fa-ambulance"></i> 108 (Ambulance)</p>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <p><i class="fas fa-headset"></i> 1800-XXX-XXXX (Toll Free)</p>
+                <p><i class="fas fa-envelope"></i> support@travelguardian.in</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Travel Guardian. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
